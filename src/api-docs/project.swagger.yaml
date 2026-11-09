@@ -1,0 +1,434 @@
+components:
+  schemas:
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Final Year Capstone"
+        description:
+          type: string
+          nullable: true
+          example: "Student final year project workspace"
+        createdBy:
+          type: integer
+          nullable: true
+          example: 1
+        creatorName:
+          type: string
+          nullable: true
+          example: "Admin User"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-11-09T08:00:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-11-09T08:00:00.000Z"
+
+    CreateProjectInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: "Final Year Capstone"
+        description:
+          type: string
+          example: "Student capstone project"
+
+    UpdateProjectInput:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Updated Project Title"
+        description:
+          type: string
+          example: "Updated description"
+
+    ProjectFilterCriteria:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: integer
+          example: [1, 2]
+        names:
+          type: array
+          items:
+            type: string
+          example: ["Final Year Capstone"]
+        createdBys:
+          type: array
+          items:
+            type: integer
+          example: [1]
+        search:
+          type: string
+          example: "Capstone"
+        createdAt:
+          $ref: "#/components/schemas/DateRangeInput"
+        updatedAt:
+          $ref: "#/components/schemas/DateRangeInput"
+
+    ProjectFilterRequest:
+      type: object
+      properties:
+        filter:
+          $ref: "#/components/schemas/ProjectFilterCriteria"
+        sort:
+          $ref: "#/components/schemas/SortInput"
+
+    ProjectPaginationRequest:
+      type: object
+      properties:
+        filter:
+          $ref: "#/components/schemas/ProjectFilterCriteria"
+        page:
+          $ref: "#/components/schemas/PaginationInput"
+        sort:
+          $ref: "#/components/schemas/SortInput"
+
+    ProjectSingleResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Project"
+        status:
+          $ref: "#/components/schemas/ResponseStatus"
+
+    ProjectListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Project"
+        sort:
+          $ref: "#/components/schemas/SortInput"
+        status:
+          $ref: "#/components/schemas/ResponseStatus"
+
+    ProjectPaginatedResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Project"
+        pagination:
+          $ref: "#/components/schemas/PaginationMeta"
+        sort:
+          $ref: "#/components/schemas/SortInput"
+        status:
+          $ref: "#/components/schemas/ResponseStatus"
+
+paths:
+  /project/add:
+    post:
+      tags:
+        - Projects
+      summary: "Add a new project"
+      description: "Creates a new project. Requires ADMIN role."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProjectInput"
+      responses:
+        "200":
+          description: "Project created successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectSingleResponse"
+        "400":
+          description: "Validation error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Forbidden - Requires ADMIN role"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /project/{projectId}:
+    get:
+      tags:
+        - Projects
+      summary: "Get project by ID"
+      description: "Retrieves project details by ID. Requires ADMIN role."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: "Numeric project ID"
+      responses:
+        "200":
+          description: "Project details retrieved"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectSingleResponse"
+        "400":
+          description: "Invalid project ID"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "Project not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      tags:
+        - Projects
+      summary: "Update project by ID"
+      description: "Updates an existing project. Requires ADMIN role."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: "Numeric project ID to update"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProjectInput"
+      responses:
+        "200":
+          description: "Project updated successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectSingleResponse"
+        "400":
+          description: "Invalid input"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "Project not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      tags:
+        - Projects
+      summary: "Delete project by ID"
+      description: "Deletes a project by ID. Requires ADMIN role."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: "Numeric project ID to delete"
+      responses:
+        "200":
+          description: "Project deleted successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectSingleResponse"
+        "400":
+          description: "Invalid project ID"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "Project not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /project/filter:
+    post:
+      tags:
+        - Projects
+      summary: "Filter projects without pagination"
+      description: "Retrieves list of projects matching criteria and sorting. Requires ADMIN role."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectFilterRequest"
+      responses:
+        "200":
+          description: "Projects list retrieved"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectListResponse"
+        "400":
+          description: "Invalid filter parameters"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /project/filter/paginated:
+    post:
+      tags:
+        - Projects
+      summary: "Filter projects with pagination"
+      description: "Retrieves paginated list of projects matching filter and pagination options. Requires ADMIN role."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectPaginationRequest"
+      responses:
+        "200":
+          description: "Paginated projects retrieved"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectPaginatedResponse"
+        "400":
+          description: "Invalid pagination or filter parameters"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+

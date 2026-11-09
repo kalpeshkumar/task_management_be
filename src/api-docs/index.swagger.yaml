@@ -1,0 +1,141 @@
+openapi: "3.0.0"
+
+info:
+  title: "Task Management API"
+  version: "1.0.0"
+  description: "RESTful API documentation for Student Task Management System with Layered Architecture."
+
+servers:
+  - url: "/"
+    description: "Current Host"
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Enter your Bearer token in the format: Bearer <token>"
+
+  schemas:
+    ResponseStatus:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 200
+        status:
+          type: string
+          example: "SUCCESS"
+        message:
+          type: string
+          example: "Success"
+
+    ErrorResponse:
+      type: object
+      properties:
+        data:
+          nullable: true
+          example: null
+        status:
+          type: object
+          properties:
+            statusCode:
+              type: integer
+              example: 400
+            status:
+              type: string
+              example: "ERROR"
+            message:
+              type: string
+              example: "Invalid request"
+
+    PaginationMeta:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+        totalRecords:
+          type: integer
+          example: 50
+        totalPages:
+          type: integer
+          example: 5
+        hasNextPage:
+          type: boolean
+          example: true
+        hasPreviousPage:
+          type: boolean
+          example: false
+        nextPage:
+          type: integer
+          nullable: true
+          example: 2
+        previousPage:
+          type: integer
+          nullable: true
+          example: null
+
+    SortInput:
+      type: object
+      properties:
+        sort:
+          type: string
+          example: "createdAt"
+        sortBy:
+          type: string
+          enum: [asc, desc, ASC, DESC]
+          example: "desc"
+
+    DateRangeInput:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date-time
+          example: "2026-01-01T00:00:00.000Z"
+        endDate:
+          type: string
+          format: date-time
+          example: "2026-12-31T23:59:59.999Z"
+
+    PaginationInput:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: "Service Health Check"
+      description: "Verify backend server status and timestamp."
+      security: []
+      responses:
+        "200":
+          description: "Service is healthy"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2026-11-09T08:00:00.000Z"

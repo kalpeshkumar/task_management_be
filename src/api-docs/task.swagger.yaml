@@ -1,0 +1,504 @@
+components:
+  schemas:
+    TaskStatusType:
+      type: string
+      enum: ["Todo", "In Progress", "Completed"]
+      example: "Todo"
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 10
+        title:
+          type: string
+          example: "Implement Authentication Module"
+        description:
+          type: string
+          nullable: true
+          example: "Configure JWT authentication and password hashing"
+        projectId:
+          type: integer
+          example: 1
+        projectName:
+          type: string
+          nullable: true
+          example: "Final Year Capstone"
+        assignedTo:
+          type: integer
+          nullable: true
+          example: 2
+        assignedToName:
+          type: string
+          nullable: true
+          example: "Jane Student"
+        assignedToEmail:
+          type: string
+          nullable: true
+          example: "jane@example.com"
+        status:
+          $ref: "#/components/schemas/TaskStatusType"
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+          example: "2026-11-20"
+        createdBy:
+          type: integer
+          nullable: true
+          example: 1
+        createdByName:
+          type: string
+          nullable: true
+          example: "Admin User"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-11-09T08:00:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-11-09T08:00:00.000Z"
+
+    CreateTaskInput:
+      type: object
+      required:
+        - title
+        - projectId
+      properties:
+        title:
+          type: string
+          example: "Implement Authentication Module"
+        description:
+          type: string
+          example: "Set up JWT and login controller"
+        projectId:
+          type: integer
+          example: 1
+        assignedTo:
+          type: integer
+          nullable: true
+          example: 2
+        status:
+          $ref: "#/components/schemas/TaskStatusType"
+        dueDate:
+          type: string
+          format: date
+          example: "2026-11-20"
+        createdBy:
+          type: integer
+          example: 1
+
+    UpdateTaskInput:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Updated Task Title"
+        description:
+          type: string
+          example: "Updated task details"
+        projectId:
+          type: integer
+          example: 1
+        assignedTo:
+          type: integer
+          nullable: true
+          example: 2
+        status:
+          $ref: "#/components/schemas/TaskStatusType"
+        dueDate:
+          type: string
+          format: date
+          example: "2026-11-25"
+
+    TaskFilterCriteria:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: integer
+          example: [1, 2]
+        titles:
+          type: array
+          items:
+            type: string
+          example: ["Implement Authentication Module"]
+        projectIds:
+          type: array
+          items:
+            type: integer
+          example: [1]
+        assignedTos:
+          type: array
+          items:
+            type: integer
+          example: [2]
+        statuses:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaskStatusType"
+        search:
+          type: string
+          example: "Auth"
+        createdAt:
+          $ref: "#/components/schemas/DateRangeInput"
+        updatedAt:
+          $ref: "#/components/schemas/DateRangeInput"
+
+    TaskFilterRequest:
+      type: object
+      properties:
+        filter:
+          $ref: "#/components/schemas/TaskFilterCriteria"
+        sort:
+          $ref: "#/components/schemas/SortInput"
+
+    TaskPaginationRequest:
+      type: object
+      properties:
+        filter:
+          $ref: "#/components/schemas/TaskFilterCriteria"
+        page:
+          $ref: "#/components/schemas/PaginationInput"
+        sort:
+          $ref: "#/components/schemas/SortInput"
+
+    TaskSingleResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Task"
+        status:
+          $ref: "#/components/schemas/ResponseStatus"
+
+    TaskListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Task"
+        sort:
+          $ref: "#/components/schemas/SortInput"
+        status:
+          $ref: "#/components/schemas/ResponseStatus"
+
+    TaskPaginatedResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Task"
+        pagination:
+          $ref: "#/components/schemas/PaginationMeta"
+        sort:
+          $ref: "#/components/schemas/SortInput"
+        status:
+          $ref: "#/components/schemas/ResponseStatus"
+
+paths:
+  /task/add:
+    post:
+      tags:
+        - Tasks
+      summary: "Add a new task"
+      description: "Creates a new task assigned to a project. Requires ADMIN role."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaskInput"
+      responses:
+        "200":
+          description: "Task created successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskSingleResponse"
+        "400":
+          description: "Validation error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Forbidden - Requires ADMIN role"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /task/{taskId}:
+    get:
+      tags:
+        - Tasks
+      summary: "Get task by ID"
+      description: "Retrieves complete task details with joined project and user information. Requires ADMIN role."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: "Numeric task ID"
+      responses:
+        "200":
+          description: "Task details retrieved"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskSingleResponse"
+        "400":
+          description: "Invalid task ID"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "Task not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      tags:
+        - Tasks
+      summary: "Update task by ID"
+      description: "Updates an existing task's title, description, status, project, or assignee. Requires ADMIN role."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: "Numeric task ID to update"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskInput"
+      responses:
+        "200":
+          description: "Task updated successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskSingleResponse"
+        "400":
+          description: "Invalid input"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "Task not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      tags:
+        - Tasks
+      summary: "Delete task by ID"
+      description: "Deletes a task by ID. Requires ADMIN role."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: "Numeric task ID to delete"
+      responses:
+        "200":
+          description: "Task deleted successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskSingleResponse"
+        "400":
+          description: "Invalid task ID"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "Task not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /task/filter:
+    post:
+      tags:
+        - Tasks
+      summary: "Filter tasks without pagination"
+      description: "Retrieves list of tasks matching criteria and sorting. Requires ADMIN role."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskFilterRequest"
+      responses:
+        "200":
+          description: "Tasks list retrieved"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskListResponse"
+        "400":
+          description: "Invalid filter parameters"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /task/filter/paginated:
+    post:
+      tags:
+        - Tasks
+      summary: "Filter tasks with pagination"
+      description: "Retrieves paginated list of tasks matching filter, page, and sorting options. Requires ADMIN role."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskPaginationRequest"
+      responses:
+        "200":
+          description: "Paginated tasks retrieved"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskPaginatedResponse"
+        "400":
+          description: "Invalid pagination or filter parameters"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
