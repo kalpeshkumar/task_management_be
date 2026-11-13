@@ -28,8 +28,7 @@ const authService = {
 
     const user = await userRepository.findByEmail(email);
     if (!user) {
-      // Don't leak whether email exists
-      throw new UnauthorizedException(ErrorMessageConstant.INVALID_CREDENTIALS);
+      throw new NotFoundException(ErrorMessageConstant.USER_NOT_FOUND);
     }
 
     // Inactive user check -> 403
