@@ -39,7 +39,7 @@ const authService = {
 
     // User exists but password not set -> 403 with code "PASSWORD_NOT_SET"
     if (!user.isPasswordSet || !user.password) {
-      return { isPasswordSet: false }
+      return { isPasswordSet: false };
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -88,7 +88,7 @@ const authService = {
       throw new InvalidRequestException(ErrorMessageConstant.USER_NOT_FOUND);
     }
 
-    if (user.isPasswordSet) {
+    if (user?.isPasswordSet) {
       throw new InvalidRequestException(ErrorMessageConstant.PASSWORD_ALREADY_SET);
     }
 
@@ -96,7 +96,7 @@ const authService = {
       throw new InvalidRequestException(ErrorMessageConstant.INVALID_OR_EXPIRED_SETUP_TOKEN);
     }
 
-    const hashedPassword = commonUtils.hashPassword(newPassword);
+    const hashedPassword = await commonUtils.hashPassword(newPassword);
     const updatedUser = await userRepository.setPassword(user.id, hashedPassword);
 
     const payload = {
@@ -166,7 +166,7 @@ const authService = {
   async logout(userId) {
     if (userId) {
       await userRepository.updateUser(userId, {
-        logoutAt: new Date()
+        logoutAt: new Date(),
       });
     }
     return {
